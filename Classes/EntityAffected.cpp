@@ -1,86 +1,60 @@
 #include "EntityAffected.h"
 #include "Hp.h"
-#include"TowerBase.h"
-#include "SoundUtil.h"
-#include "TowerManage.h"
 
 EntityAffected::~EntityAffected() = default;
 
-bool EntityAffected::init(const int& rIId, const std::string& rSCsvFileName)
+bool EntityAffected::init(const int& rId, const BasicInformation& basicInformation,const AffectedInformation& affectedInformation)
 {
-    bool bRet = false;
-    do
-    {
-        CC_BREAK_IF(!Entity::init(rIId, rSCsvFileName));
-        _iHp = CsvUtil::getInstance()->getInt(_iID, en_Hp, rSCsvFileName);
-        _iState = en_Normal;
-        _fSlowDuration = 0;
-        _fStopDuration = 0;
-        _fPoisonDuration = 0;
-        _Pos = getPosition();
-        _Size = getContentSize();
-        this->schedule(schedule_selector(EntityAffected::checkAtkTarget));
-        bRet = true;
-    } while (0);
-
-    return bRet;
+	Entity::init(rId, basicInformation);
+	_iHp = affectedInformation._iHp;
+    _iSpeed = 0;
+	_Pos = getPosition();
+	_Size = getContentSize();
+	return 0;
 }
 
-void EntityAffected::beHurt(const AtkProperty tBeHurtValue)
+void EntityAffected::beHurt(const int towerATK)
 {
-    if (this->getIsDead())
-        return;
-    _iState |= tBeHurtValue._enAtkState;
-    _iBulletStateType = tBeHurtValue._iButtltType;
-    switch (tBeHurtValue._enAtkState)
+	if (this->_bIsDead)
+		return;
+	auto IHp = _iHp - towerATK;
+    if (IHp > 0)
     {
-    case en_Slow: _fSlowDuration = tBeHurtValue._iDuration; break;
-    case en_Stop: _fStopDuration = tBeHurtValue._iDuration; break;
-    case en_Poison: _fPoisonDuration = tBeHurtValue._iDuration; break;
-    default:
-        break;
-    }
-    auto tIHp = getIHp() - tBeHurtValue._iAtk;
-    if (tIHp > 0)
-    {
-        unschedule(schedule_selector(EntityAffected::closeHpSlot));
+        unschedule(schedule_selector(EntityAffected::closeHp));
         if (!_bHpSlotExsit)
         {
-            hpSlotVisible(!_bHpSlotExsit);
+            openHp(!_bHpSlotExsit);
             _bHpSlotExsit = true;
         }
         _pHp->setVisible(true);
-        schedule(schedule_selector(EntityAffected::closeHpSlot), _iHpCloseTime);
-        setIHp(tIHp);
-        _pHp->setHp(getIHp());
+        schedule(schedule_selector(EntityAffected::closeHp), _iHpCloseTime);
+        _iHp = IHp;
+        _pHp->setHp(_iHp);
     }
-    else if (tIHp <= 0)
+    else if (IHp <= 0)
     {
         doDead();
     }
 }
 
-void EntityAffected::closeHpSlot(float dt)
+void EntityAffected::closeHp(float dt)
 {
     _pHp->setVisible(false);
 }
 
-void EntityAffected::hpSlotVisible(const bool& rBIsVisible)
+void EntityAffected::openHp(const bool& IsVisible)
 {
-    if (rBIsVisible) createHpSlotSprite();
-    else _pHp->setVisible(rBIsVisible);
+    if (IsVisible) createHpSprite();
+    else _pHp->setVisible(IsVisible);
 }
 
 void EntityAffected::deadAction(const std::string& rSDeadImageFile)
 {
-    auto tValue = std::make_tuple(getPosition(), _iValue);
-    NOTIFY->postNotification("monsterDeadMoney", reinterpret_cast<Ref*>(&tValue));
     if (_pHp) _pHp->removeFromParent();
-    if (_pLockAtkTarget) _pLockAtkTarget->removeFromParent();
     Entity::deadAction();
 }
 
-void EntityAffected::createHpSlotSprite()
+void EntityAffected::createHpSprite()
 {
     _pHp = Hp::create(this);
     _pHp->retain();
@@ -91,16 +65,4 @@ void EntityAffected::createHpSlotSprite()
     addChild(_pHp);
 }
 
-void EntityAffected::checkAtkTarget(float dt) {
-    auto tTowerVec = TowerManager::getInstance()->getTowerVec();
-    if (_bIsAtkTarget) {
-        for (auto& towerItem : tTowerVec)
-        {
-            if (towerItem->isInAtkRange(this->getPosition())) {
-                towerItem->setAtkTarget(this);
-                towerItem->setIsHaveAtkTarget(true);
-            }
-        }
-    }
-}
 
