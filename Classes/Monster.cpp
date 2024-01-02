@@ -1,110 +1,69 @@
-#include"Monster.h"
-#include"MonsterCreate.h"
-#include"MonsterManager.h"
-#include"SoundUtil.h"
-#include"PublicDefine.h"
+#include "Monster.h"
+#include "LevelScene.h"
 
-
-LevelScene levelScene;
-
-MonsterBase* MonsterBase::create(const int& rID)
+MonsterBase* MonsterBase::create(const int& rIId, const std::vector<std::string>& basicInformation, const std::vector<std::string>& affectedInformation)
 {
-	auto pMonster = new MonsterBase();
-	if (pMonster && pMonster->init(rID))
-	{
-		pMonster->autorelease();
-		return pMonster;
-	}
-	CC_SAFE_DELETE(pMonster);
-	return nullptr;
+    MonsterBase* pMonster = new MonsterBase();
+    if (pMonster && pMonster->init(rIId,basicInformation,affectedInformation))
+    {
+        pMonster->autorelease();
+        return pMonster;
+    }
+    else
+    {
+        delete pMonster;
+        return nullptr;
+    }
 }
 
-void MonsterBase::createAnimation()
+void MonsterBase::setMaxSpeed(const float& rSpeed)
 {
-	std::vector<std::string> AnimationFiles;
-	for (int i = 1; i <= _IAnimationFrameCount; i++)
-	{
-		AnimationFiles.push_back(_sModelName + StringUtils::format("%d.png",i));
-	}
-	createDynamicEntityAnimation(AnimationFiles);
+    _fMaxSpeed = rSpeed;
 }
 
-void MonsterBase::setAction(const float& rDt)
+void MonsterBase::deadAction(const std::string& rSDeadImageFile)
 {
-	_Animation->setDelayPerUnit(rDt);
-	getSprite()->runAction(Animate::create(_Animation));
+    EntityAffected::deadAction(rSDeadImageFile);
 }
 
-bool MonsterBase::init(const int& rID)
-{
-	if (!EntityAffected::init(rID, MONSTERCSVFILE) || !DynamicInterface::init(rID, MONSTERCSVFILE))
-	{
-		return false;
-	}
-	_currentNodeIndex = 0;
-	_currentPosition = levelScene.ij_to_xy(levelScene.levelPath[_currentNodeIndex].i, levelScene.levelPath[_currentNodeIndex].j);
-	_bLeft = true;
-	createAnimation();
-	setAction(0.15f);
-	MonsterManager::getInstance()->addMonster(this);
-	scheduleUpdate();
 
-	return true;
+
+bool MonsterBase::init(const int& rId, const std::vector<std::string>& basicInformation, const std::vector<std::string>& affectedInformation)
+{
+    if (!EntityAffected::init(rId,basicInformation,affectedInformation))
+    {
+        return false;
+    }
+
+    monster = Sprite::create("LevelScene/Monsters01.png");
+    monster->setPosition(ij_to_xy(0, 1));
+    this->addChild(monster, 1);
+    move();
+
+    return true;
 }
 
-void MonsterBase::deadAction(const std::string& rSDeadFile)
+
+void MonsterBase::move()
 {
-	sound();
-	NOTIFY->postNotification("MonsterDead", this);
-	getSprite()->removeAllChildrenWithCleanup(true);
-	EntityAffected::deadAction();
-}
+    if (levelPath.empty())
+    {
+        // æ€ªç‰©åˆ°è¾¾ç»ˆç‚¹ï¼Œæ‰§è¡Œæ¶ˆå¤±é€»è¾‘
+        monster->removeFromParent();
+        return;
+    }
 
-void MonsterBase::sound()
-{
-	const int fFigure = rand() % 3 + 1;
-	SoundUtil::getInstance()->playEffect(MONSTERMUSIC + StringUtils::format("Land11%d.mp3", fFigure));
-}
+    // è·å–ä¸‹ä¸€ä¸ªè·¯å¾„èŠ‚ç‚¹
+    PathNode nextNode = levelPath.front();
+    levelPath.erase(levelPath.begin());
 
-void MonsterBase::setSpeed(const int& Speed)
-{
-	setISpeed(Speed);
-}
+    // æ ¹æ®è·¯å¾„èŠ‚ç‚¹è®¾ç½®æ€ªç‰©ç²¾çµçš„ç§»åŠ¨åŠ¨ä½œ
+    float duration = 0.45f; // ç§»åŠ¨æ¯æ ¼è·¯å¾„çš„æ—¶é—´
+    Vec2 targetPos = ij_to_xy(nextNode.i, nextNode.j);
+    MoveTo* moveAction = MoveTo::create(duration, targetPos);
+    CallFunc* callback = CallFunc::create(CC_CALLBACK_0(MonsterBase::move, this));
+    Sequence* sequence = Sequence::create(moveAction, callback, nullptr);
 
-void MonsterBase::update(float dt)
-{
-
-	// ÅĞ¶ÏÊÇ·ñµ½´ïÖÕµã
-	if (_currentNodeIndex >= levelScene.levelPath.size() - 1)
-	{
-		// µ½´ïÖÕµã£¬Í£Ö¹ÒÆ¶¯
-		unscheduleUpdate();
-		return;
-	}
-
-	// »ñÈ¡ÏÂÒ»¸ö½ÚµãµÄÎ»ÖÃ
-	Vec2 nextPosition = levelScene.ij_to_xy(levelScene.levelPath[_currentNodeIndex + 1].i, levelScene.levelPath[_currentNodeIndex + 1].j);
-
-	// ¼ÆËãÒÆ¶¯·½ÏòºÍ¾àÀë
-	Vec2 direction = (nextPosition - _currentPosition).getNormalized();
-	float distance = getISpeed() * dt;
-
-	// ¼ÆËãĞÂµÄÎ»ÖÃ
-	Vec2 newPosition = _currentPosition + direction * distance;
-
-	// ÅĞ¶ÏÊÇ·ñµ½´ïÏÂÒ»¸ö½Úµã
-	if ((nextPosition - _currentPosition).length() <= distance)
-	{
-		// µ½´ïÏÂÒ»¸ö½Úµã£¬¸üĞÂµ±Ç°Î»ÖÃºÍ½ÚµãË÷Òı
-		_currentPosition = nextPosition;
-		_currentNodeIndex++;
-	}
-	else
-	{
-		// »¹Î´µ½´ïÏÂÒ»¸ö½Úµã£¬¸üĞÂµ±Ç°Î»ÖÃ
-		_currentPosition = newPosition;
-	}
-
-	// ÉèÖÃMonsterµÄÎ»ÖÃ
-	setPosition(_currentPosition);
+    // æ‰§è¡Œç§»åŠ¨åŠ¨ä½œ
+    monster->runAction(sequence);
 }
