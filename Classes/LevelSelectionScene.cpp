@@ -3,6 +3,9 @@
 
 USING_NS_CC;
 
+
+SaveData CurrentData = SaveData();
+
 Scene* LevelSelectionScene::createScene()
 {
     return LevelSelectionScene::create();
@@ -22,67 +25,75 @@ bool LevelSelectionScene::init()
         return false;
     }
 
+    CurrentData = SaveGameManagement::saveSlots[SaveGameManagement::choosedSlot];
+
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    // åˆ›å»ºèƒŒæ™¯ç²¾çµ
-    auto background = cocos2d::Sprite::create("background.png");
-    background->setPosition(cocos2d::Director::getInstance()->getVisibleSize() / 2);
+    // ´´½¨±³¾°¾«Áé
+    auto background = cocos2d::Sprite::create("LevelScene/LevelSelection.png");
+
+    float backgroundImageWidth = background->getContentSize().width;
+    background->setAnchorPoint(cocos2d::Vec2(0, 0));  // ÉèÖÃÃªµãÎª×óÏÂ½Ç
+    background->setPosition(cocos2d::Vec2(0, 0));    // ÉèÖÃÎ»ÖÃÎª³õÊ¼ÆÁÄ»×óÏÂ½Ç
+
+    //background->setPosition(cocos2d::Director::getInstance()->getVisibleSize() / 2);
     this->addChild(background);
 
-    // åˆ›å»ºæ–‡å­—æ ‡é¢˜
-    auto label = Label::createWithTTF("Select Level", "fonts/Marker Felt.ttf", 24);
-    if (label == nullptr)
-    {
-        problemLoading("'fonts/Marker Felt.ttf'");
-    }
-    else
-    {
-        // position the label on the center of the screen
-        label->setPosition(Vec2(origin.x + visibleSize.width / 2,
-            origin.y + visibleSize.height - label->getContentSize().height));
 
-        // add the label as a child to this layer
-        this->addChild(label, 1);
-    }
+    auto ChooseLevel1Button = MenuItemImage::create("LevelScene/Level.png",
+        "LevelScene/Level.png", CC_CALLBACK_1(LevelSelectionScene::onChooseLevel1Clicked, this));
 
-    auto ChooseLevel1Button = MenuItemImage::create("CloseNormal.png",
-        "CloseSelected.png", CC_CALLBACK_1(LevelSelectionScene::onChooseLevel1Clicked, this));
-
-    float x = origin.x + visibleSize.width / 2;
-    float y = origin.y + visibleSize.height / 2;
+    float x = origin.x + visibleSize.width / 2 - 80;
+    float y = origin.y + visibleSize.height / 2 + 80;
 
     ChooseLevel1Button->setPosition(Vec2(x, y));
 
-    auto ChooseLevel2Button = MenuItemImage::create("CloseNormal.png",
-        "CloseSelected.png", CC_CALLBACK_1(LevelSelectionScene::onChooseLevel2Clicked, this));
+    auto ChooseLevel2Button = MenuItemImage::create("LevelScene/Level.png",
+        "LevelScene/Level.png", CC_CALLBACK_1(LevelSelectionScene::onChooseLevel2Clicked, this));
 
-    x = origin.x + visibleSize.width / 2;
-    y = origin.y + visibleSize.height / 2 -100;
+    x = origin.x + visibleSize.width / 2 + 50;
+    y = origin.y + visibleSize.height / 2 - 50;
 
     ChooseLevel2Button->setPosition(Vec2(x, y));
 
-   
-    // åˆ›å»ºèœå•
-    auto menu = cocos2d::Menu::create(ChooseLevel1Button, ChooseLevel2Button, nullptr);
+    auto backButton = MenuItemImage::create("LevelScene/home.png", "LevelScene/home.png", CC_CALLBACK_1(LevelSelectionScene::onBackButtonClicked, this));
+    backButton->setPosition(Vec2(origin.x + 40, visibleSize.height + origin.y - 40));
+
+    auto shopButton = MenuItemImage::create("LevelScene/shop.png", "LevelScene/shop.png", CC_CALLBACK_1(LevelSelectionScene::onShopButtonClicked, this));
+    shopButton->setPosition(Vec2(origin.x + 110, visibleSize.height + origin.y - 40));
+
+    // ´´½¨²Ëµ¥
+    auto menu = cocos2d::Menu::create(ChooseLevel1Button, ChooseLevel2Button, backButton, shopButton, nullptr);
     menu->setPosition(cocos2d::Vec2::ZERO);
     this->addChild(menu);
 
     return true;
 }
 
-
-// æŒ‰é’®ç‚¹å‡»äº‹ä»¶åˆ›å»ºä¸€ä¸ªæ–°çš„å­˜æ¡£
 void LevelSelectionScene::onChooseLevel1Clicked(cocos2d::Ref* sender)
 {
-
-
+    Director::getInstance()->pushScene(LevelScene::createScene());
 }
 
 
 void LevelSelectionScene::onChooseLevel2Clicked(cocos2d::Ref* sender)
 {
+    Director::getInstance()->pushScene(Level_2::createScene());
+}
 
+void LevelSelectionScene::onShopButtonClicked(Ref* sender)
+{
+    Director::getInstance()->pushScene(ShopScene::createScene());
+}
 
+void LevelSelectionScene::onBackButtonClicked(Ref* sender)
+{
+    SaveGameManagement::saveSlot(CurrentData);
+    SaveGameManagement::SaveSaveData();
+
+    // ·µ»ØÖ÷½çÃæ
+    cocos2d::Director::getInstance()->popScene();
+    cocos2d::Director::getInstance()->popScene();
 }

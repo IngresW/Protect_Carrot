@@ -2,22 +2,30 @@
 #define _NEWGAME_SCENE_H
 
 #include "cocos2d.h"
-class NewGameScene:public  cocos2d::Scene
+#include "LevelSelectionScene.h"
+#include "SaveGameManager.h"
+#include "SimpleAudioEngine.h"
+#include "cocos/ui/CocosGUI.h"
+
+class NewGameScene : public cocos2d::Scene
 {
 public:
     static cocos2d::Scene* createScene();
 
     virtual bool init();
 
-    // 按钮点击事件创建一个新的存档函数
-    void onCreateLoadClicked(cocos2d::Ref* sender);
+    // 按钮回调函数
+    void onCreateCharacterButtonClicked(cocos2d::Ref* sender);
+    void onBackButtonClicked(cocos2d::Ref* sender);
 
-    //返回到主菜单界面
-    void onBacktoMainClicked(cocos2d::Ref* sender);
+    void textFieldEvent(cocos2d::Ref* sender, cocos2d::ui::TextField::EventType type);
 
+    // implement the "static create()" method manually
     CREATE_FUNC(NewGameScene);
-};
 
+    SaveGameManagement saveGameManagement;
+    std::string character_Name;
+};
 
 #endif
 

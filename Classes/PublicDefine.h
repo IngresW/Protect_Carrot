@@ -2,9 +2,14 @@
 #define PUBLIC__DEFINE
 
 #include "cocos2d.h"
-#include "PublicSourceDefine.h"
-#include "CsvUtil.h"
 using namespace cocos2d;
+
+struct PathNode
+{
+    int i, j;
+    char dir;
+};
+
 
 class EntityAffected;
 class TowerBase;

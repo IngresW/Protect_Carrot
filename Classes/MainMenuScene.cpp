@@ -1,6 +1,7 @@
 #include "MainMenuScene.h"
 #include "NewGameScene.h"
 #include "LoadGameScene.h"
+#include "LevelSelectionScene.h"
 #include "SimpleAudioEngine.h"
 
 USING_NS_CC;
@@ -9,7 +10,6 @@ Scene* MainMenuScene::createScene()
 {
     return MainMenuScene::create();
 }
-// Print useful error message instead of segfaulting when files are not there.
 
 static void problemLoading(const char* filename)
 {
@@ -38,7 +38,7 @@ bool MainMenuScene::init()
     auto title = Sprite::create("MainMenu/Title.png");
 
     float x = origin.x + visibleSize.width / 2;
-    float y = origin.y + visibleSize.height / 2 + 80;
+    float y = origin.y + visibleSize.height / 2 + 200;
 
     title->setPosition(Vec2(x, y));
 
@@ -59,7 +59,7 @@ bool MainMenuScene::init()
                                                 "MainMenu/LoadGameSelected.png",
                                                  CC_CALLBACK_1(MainMenuScene::onLoadGameClicked, this));
 
-    y = origin.y + visibleSize.height / 2 - 60;
+    y = origin.y + visibleSize.height / 2 - 110;
 
     loadGameButton->setPosition(Vec2(x, y));
 
@@ -68,7 +68,7 @@ bool MainMenuScene::init()
                                             "MainMenu/QuitSelected.png",        
                                             CC_CALLBACK_1(MainMenuScene::onQuitClicked, this));
 
-    y = origin.y + visibleSize.height / 2 - 110;
+    y = origin.y + visibleSize.height / 2 - 210;
 
     quitButton->setPosition(Vec2(x, y));
 
@@ -82,22 +82,19 @@ bool MainMenuScene::init()
 
 void MainMenuScene::onNewGameClicked(cocos2d::Ref* sender)
 {
-    // 处理新建游戏按钮点击事件
     // 创建新建游戏场景
     auto newGameScene = NewGameScene::createScene();
 
     // 切换到新建游戏场景
     cocos2d::Director::getInstance()->pushScene(newGameScene);
-    //Director::getInstance()->end();
 }
 
 void MainMenuScene::onLoadGameClicked(cocos2d::Ref* sender)
 {
-    // 处理读取存档按钮点击事件
-    // 创建读取存档场景
+    // 创建新建游戏场景
     auto loadGameScene = LoadGameScene::createScene();
 
-    // 切换到读取存档场景
+    // 切换到新建游戏场景
     cocos2d::Director::getInstance()->pushScene(loadGameScene);
 }
 
@@ -106,3 +103,4 @@ void MainMenuScene::onQuitClicked(cocos2d::Ref* sender)
     // 处理退出游戏按钮点击事件
     Director::getInstance()->end();
 }
+
