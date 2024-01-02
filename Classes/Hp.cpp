@@ -1,50 +1,67 @@
 #include "Hp.h"
 
+Hp::Hp(EntityAffected* pEntityAffected)
+    : _EntityAffected(pEntityAffected),
+    _iHpMax(_EntityAffected->_iHp)
+{
+}
+
 Hp::~Hp() = default;
 
-Hp* Hp::create(EntityAffected* pVictimEntity)
+Hp* Hp::create(EntityAffected* pEntityAffected)
 {
-    auto pHp = new Hp();
-    if (pHp && pHp->init(pVictimEntity)) pHp->autorelease();
-    else CC_SAFE_DELETE(pHp);
+    auto pHp = new Hp(pEntityAffected);
+    if (pHp && pHp->init()) {
+        pHp->autorelease();
+    }
+    else {
+        CC_SAFE_DELETE(pHp);
+    }
     return pHp;
 }
 
-bool Hp::init(EntityAffected* pEntityAffected)
+bool Hp::init()
 {
-    bool bRet = false;
+    if (!Node::init()) {
+        return false;
+    }
 
-    do
-    {
-        CC_SAFE_RETAIN(pEntityAffected);
-        _pEntityAffected = pEntityAffected;
-        _iHpMax = _pEntityAffected->getIHp();
+    // 创建底部血量背景图片
+    auto pHpBg = Sprite::createWithSpriteFrameName("fight_blood_bg.png");
+    pHpBg->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    addChild(pHpBg);
 
-        auto pHpBg = Sprite::createWithSpriteFrameName("MonsterHP01.png");
-        pHpBg->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
-        addChild(pHpBg);
+    // 创建血量显示容器
+    auto clippingNode = ClippingNode::create();
+    clippingNode->setAlphaThreshold(0.5f); // 设置透明度阈值
+    clippingNode->setInverted(false); // 设置剪裁区域可见
+    addChild(clippingNode);
 
-        _pHp = ProgressTimer::create(Sprite::createWithSpriteFrameName("MonsterHP02.png"));
-        _pHp->setType(ProgressTimer::Type::BAR);
-        _pHp->setMidpoint(Vec2::ANCHOR_MIDDLE_RIGHT);
-        _pHp->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
-        _pHp->setBarChangeRate(Vec2::ANCHOR_BOTTOM_RIGHT);
-        _pHp->setPercentage(0);
-        _pHp->setPositionX(2);
+    // 创建血量显示图片
+    auto hpSprite = Sprite::createWithSpriteFrameName("fight_blood_top.png");
+    hpSprite->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    clippingNode->addChild(hpSprite);
 
-        addChild(_pHp);
-        bRet = true;
-    } while (0);
+    // 设置血量显示图片为剪裁节点的子节点
+    clippingNode->setStencil(hpSprite);
 
-    return bRet;
+    _Hp = ProgressTimer::create(hpSprite);
+    _Hp->setType(ProgressTimer::Type::BAR);
+    _Hp->setMidpoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    _Hp->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    _Hp->setBarChangeRate(Vec2::ANCHOR_BOTTOM_RIGHT);
+    _Hp->setPercentage(100);
+    _Hp->setPositionX(2);
+    addChild(_Hp);
 }
 
 void Hp::setHp(const int& rIHp)
 {
-    _pHp->setPercentage(100 - _pEntityAffected->getIHp() * 1.0f / _iHpMax * 100);
+    int newHp = std::max(0, std::min(rIHp, _iHpMax));
+    _Hp->setPercentage(100 - newHp * 1.0f / _iHpMax * 100);
 }
 
-const Size& Hp::getContentSize()const
+const Size& Hp::getContentSize() const
 {
-    return _pHp->getContentSize();
+    return _Hp->getContentSize();
 }
