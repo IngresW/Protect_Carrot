@@ -4,12 +4,34 @@
 #include "cocos2d.h"
 using namespace cocos2d;
 
-struct PathNode
+struct BasicInformation
 {
-    int i, j;
-    char dir;
+    std::string _sFileName;
+    bool _bIsDead;
 };
 
+struct AffectedInformation
+{
+    int _iHp;
+    int _iSpeed;
+};
+
+struct BulletInformation
+{
+    int _ibulletid;
+    int _iAtk;
+    int _iAtkSpeed;
+};
+
+struct TowerInformation
+{
+    BulletInformation _BBullet;
+    double _dAtkRange;
+    int _iCreateCost;
+    int _iUpgradeCost;
+    int _iValue;
+    int _towerId;
+};
 
 class EntityAffected;
 class TowerBase;
