@@ -1,110 +1,65 @@
-#include "EntityBase.h"
+#include"EntityBase.h"
 
-unsigned long Entity::ID = 0;
 Entity::~Entity() = default;
 
-bool Entity::init(const int& rID, const std::string& rSCsvFileName)
+bool Entity::init(const int& rId, const BasicInformation basicInformation)
 {
-    initProperty(rID, rSCsvFileName);
-    ++ID;
-    _myID = ID;
+    _iId = rId;
+    _sFileName = basicInformation._sFileName;
+    _bIsDead = false;
+    bindSprite(Sprite::createWithSpriteFrameName(_sFileName));
     return true;
 }
 
-void Entity::initProperty(const int& rID, const std::string& rSCsvFileName)
+void Entity::bindSprite(Sprite* pSprite)
 {
-    auto pCsvUtil = CsvUtil::getInstance();
-
-    _iID = rID;
-    auto pData = pCsvUtil->getRowData(rID, rSCsvFileName);
-    _sName = pData.at(en_Name);
-    _sModelName = pData.at(en_ModelName);
-    _iValue = atoi(pData.at(en_Value).c_str());
-    _IAnimationFrameCount = pCsvUtil->getInt(rID, en_AnimationCount, rSCsvFileName);
-    _iLevel = pCsvUtil->getInt(_iID, en_Level, rSCsvFileName);
-    _bIsDead = false;
-    std::string sSpriteName = "";
-    if (_IAnimationFrameCount)
-        sSpriteName = _sModelName + "1" + PHOTOPOSTFIX;
-    else
-        sSpriteName = _sModelName + PHOTOPOSTFIX;
-
-    bindSprite(Sprite::createWithSpriteFrameName(sSpriteName));
-}
-
-void Entity::bindSprite(cocos2d::Sprite* pSprite)
-{
-    if (PSprite == pSprite)
+    if (_sprite)
     {
-        return; // Èç¹û´«ÈëµÄ¾«ÁéÓëµ±Ç°°ó¶¨µÄ¾«ÁéÏàÍ¬£¬ÎÞÐè½øÐÐÈÎºÎ²Ù×÷
+        _sprite->stopAllActions();
+        removeChild(_sprite, true);  // ä½¿ç”¨cleanupå‚æ•°ç§»é™¤å­èŠ‚ç‚¹ï¼ŒåŒæ—¶é‡Šæ”¾ç²¾çµçš„å†…å­˜
+        CC_SAFE_RELEASE_NULL(_sprite);
     }
-    if (PSprite)
+    _sprite = pSprite;
+    if (_sprite)
     {
-        PSprite->stopAllActions();
-        removeChild(PSprite, true);  // Ê¹ÓÃcleanup²ÎÊýÒÆ³ý×Ó½Úµã£¬Í¬Ê±ÊÍ·Å¾«ÁéµÄÄÚ´æ
-        CC_SAFE_RELEASE_NULL(PSprite);
-    }
-
-    PSprite = pSprite;
-
-    if (PSprite)
-    {
-        CC_SAFE_RETAIN(PSprite);
-        addChild(PSprite);
+        CC_SAFE_RETAIN(_sprite);
+        addChild(_sprite);
     }
 }
 
 void Entity::doDead()
 {
-    setIsDead(true);
-    PSprite->stopAllActions();
+    _bIsDead = true;
+    _sprite->stopAllActions();
 }
 
-void Entity::deadAction(const std::string& rSDeadImageFile)
+void Entity::deadAction(const std::string& deadImageFile)
 {
-
-    auto sDeadImageFile = rSDeadImageFile;
-    auto pAnimation = Animation::create();
-    auto pSpriteFrameCache = SpriteFrameCache::getInstance();
-
-    if (sDeadImageFile.empty())
+    if (!deadImageFile.empty())
     {
-        if (1 == _iLevel) sDeadImageFile = "air0";
-        else if (2 == _iLevel) sDeadImageFile = "air1";
-        else if (3 == _iLevel) sDeadImageFile = "air2";
-        for (int index = 1; index <= _IAnimationFrameCount; ++index)
-            pAnimation->addSpriteFrame(pSpriteFrameCache->getSpriteFrameByName(sDeadImageFile + StringUtils::format("%d", index) + PHOTOPOSTFIX));
-
+        SpriteFrame* deadSpriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(deadImageFile);
+        if (deadSpriteFrame)
+        {
+            _sprite->setSpriteFrame(deadSpriteFrame);
+        }
     }
-    else
-    {
-        for (int i = 1; i <= 2; i++)
-            pAnimation->addSpriteFrame(pSpriteFrameCache->getSpriteFrameByName(sDeadImageFile + StringUtils::format("%02d", i) + PHOTOPOSTFIX));
-    }
-
-    pAnimation->setLoops(1);
-    pAnimation->setDelayPerUnit(0.1f);
-    PSprite->runAction(Sequence::create(Animate::create(pAnimation), CallFunc::create([this]() {this->removeFromParent(); }), NULL));
+    // ç›´æŽ¥ç§»é™¤ç²¾çµ
+    removeChild(_sprite, true);
 }
 
-Rect Entity::getBoundingBox()const
+Rect Entity::getBoundingBox() const
 {
-    auto &tPos = getPosition();
-    auto &tSize = PSprite->getContentSize();
+    Vec2 tPos = getPosition();
+    Size tSize = _sprite->getContentSize();
     return Rect(tPos.x - tSize.width / 2, tPos.y - tSize.height / 2, tSize.width, tSize.height);
 }
 
-unsigned int Entity::getmID()const
+const Size& Entity::getContentSize() const
 {
-    return _myID;
-}
-
-const Size& Entity::getContentSize()const
-{
-    return PSprite->getContentSize();
+    return _sprite->getContentSize();
 }
 
 Sprite* Entity::getSprite()
 {
-    return PSprite;
+    return _sprite;
 }
