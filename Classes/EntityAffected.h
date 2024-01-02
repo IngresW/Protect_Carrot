@@ -2,40 +2,32 @@
 #define ENTITY__AFFECTED
 
 #include "EntityBase.h"
-class Hp;
+#include "Hp.h"
 
-class EntityAffected: public Entity
+class EntityAffected :public Entity
 {
 public:
 	virtual ~EntityAffected();
-	virtual void beHurt(const AtkProperty tBeHurtValue);
-	virtual void hpSlotVisible(const bool& rBIsVisible);
+	virtual void beHurt(const int towerATK);
+	virtual void openHp(const bool& rBIsVisible);
+	int _iHp;
+	int _iSpeed;
 
 protected:
-	virtual bool init(const int& rIId, const std::string& rSCsvFileName);
-	virtual void checkAtkTarget(float dt); 
-	virtual void closeHpSlot(float dt);
-	virtual void deadAction(const std::string& rSDeadImageFile = "");
-	virtual void createHpSlotSprite();
-
-
-	CC_SYNTHESIZE_PASS_BY_REF(int, _iHp, IHp);
-	CC_SYNTHESIZE_PASS_BY_REF(int, _iState, IState);
-	CC_SYNTHESIZE_PASS_BY_REF(float, _fSlowDuration, FSlowDuration);
-	CC_SYNTHESIZE_PASS_BY_REF(float, _fStopDuration, fStopDuration);
-	CC_SYNTHESIZE_PASS_BY_REF(float, _fPoisonDuration, fPoisonDuration);
-	CC_SYNTHESIZE_PASS_BY_REF(float, _iBulletStateType, IBulletStateType);
+	virtual bool init(const int& rId, const BasicInformation& basicInformation, const AffectedInformation& affectedInformation);
+	virtual void closeHp(float dt);
+	virtual void deadAction(const std::string& deadImageFile = "");
+	virtual void createHpSprite();
 	const int _iHpCloseTime = 3;
 
 private:
-
-    bool _bHpSlotExsit = false;
-    Hp* _pHp = nullptr;
-    Sprite* _pLockAtkTarget = nullptr;
-    Animate* _pLockFlagAnimate = nullptr;
-    bool _bIsAtkTarget = false;
-    Vec2 _Pos;
-    Size _Size;
+	bool _bHpSlotExsit = false;
+	Hp* _pHp = nullptr;
+	bool _bIsAtkTarget = false;
+	Vec2 _Pos;
+	Size _Size;
 };
+
+
 
 #endif
