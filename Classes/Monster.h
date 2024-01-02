@@ -1,27 +1,24 @@
-#ifndef MONSTER__
-#define MONSTER__
-
+#ifndef MONSTER__BASE
+#define MONSTER__BASE
 #include "EntityAffected.h"
-#include "DynamicInterface.h"
-#include "LevelScene.h"
 
-class MonsterBase :public EntityAffected, public DynamicInterface
+class MonsterBase : public EntityAffected
 {
 public:
-	static MonsterBase* create(const int& rID);
-	void setSpeed(const int& Speed);
-	void update(float dt);
+    static MonsterBase* create(const int& rIId, const std::vector<std::string>& basicInformation, const std::vector<std::string>& affectedInformation);
+
+    void setMaxSpeed(const float& rSpeed);
 
 protected:
-	virtual void deadAction(const std::string& rSDeadImageFile = "")override;
-	virtual void setAction(const float& rDt);
-	virtual bool init(const int& rID);
-	virtual void createAnimation();
-	virtual void sound();
-	CC_SYNTHESIZE_PASS_BY_REF(bool, _bLeft, Left);
-	Vec2 _currentPosition; // 当前位置
-	int _currentNodeIndex; // 当前节点索引
+    virtual void deadAction(const std::string& rSDeadImageFile = "") override;
+    virtual bool init(const int& rId, const std::vector<std::string>& basicInformation, const std::vector<std::string>& affectedInformation);
+    virtual void move();
+
+private:
+    float _fMaxSpeed;
+    Sprite* monster;
 };
 
 
-#endif
+
+#endif // !MONSTER__BASE
