@@ -2,24 +2,15 @@
 #define TOWER__BOTTLE
 #include "TowerBase.h"
 
-class TowerFireBottle :public TowerBase {
-protected:
 
-	virtual bool init();
-
-	void  chooseAtkTarget();
-
-	void missAtkTarget();
-
-	void fire(float dt);
-
-	int const rId = 16;
-
-	Sprite* _doActionSprite;
-
+class TowerBottle : public TowerBase
+{
 public:
+    static TowerBottle* createTower(const int& rId, const BasicInformation& basicInformation, const TowerInformation& towerInformation);
+    virtual bool init(const int& rId, const BasicInformation& basicInformation, const TowerInformation& towerInformation) ;
 
-	CREATE_FUNC(TowerFireBottle);
-
+protected:
+    virtual void upGrade() override;
 };
-#endif
+
+#endif // !TOWER__BOTTLE
