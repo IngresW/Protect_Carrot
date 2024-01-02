@@ -4,27 +4,22 @@
 #include "EntityAffected.h"
 class EntityAffected;
 
-class Hp:public Node
+class Hp : public Node 
 {
 public:
-	virtual ~Hp();
-	static Hp* create(EntityAffected* pEntityAffected);
-	virtual void setHp(const int& rIHp);
-	virtual const Size& getContentSize()const;
+    static Hp* create(EntityAffected* pEntityAffected);
 
-	ProgressTimer* _pHp = nullptr;
-	int _iHpMax = 0;
-
-protected:
-
-	virtual bool init(EntityAffected* pEntityAffected);
-
+    void setHp(const int& rIHp);
+    const Size& getContentSize() const;
 
 private:
-	EntityAffected* _pEntityAffected = nullptr;
+    explicit Hp(EntityAffected* pEntityAffected);
+    ~Hp() override;
 
+    bool init();
+
+    ProgressTimer* _Hp = nullptr;
+    int _iHpMax = 0;
+    EntityAffected* _EntityAffected = nullptr;
 };
-
-
-
 #endif
